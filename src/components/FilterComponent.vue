@@ -1,10 +1,20 @@
 <script setup lang="js">
 import { ref } from 'vue'
-import { checkInput, fetchData } from '@/utils'
+import { checkInput } from '@/utils'
+import { useDataStore } from '@/stores/data'
+import { defineProps } from 'vue'
+
+const props = defineProps(['scrollTableUp'])
+const dataStore = useDataStore()
 
 const search = ref('')
 const handleClick = async () => {
-  await fetchData('https://jsonplaceholder.typicode.com/photos?_limit=30')
+  search.value = checkInput(search.value.trim())
+  dataStore.setAlbums(search.value)
+  dataStore.setStartIndex(0)
+  dataStore.setLimit(30)
+  props.scrollTableUp()
+  await dataStore.fetchData(false)
 }
 </script>
 
@@ -17,7 +27,13 @@ const handleClick = async () => {
       v-model="search"
       @keyup="() => (search = checkInput(search))"
       @blur="() => (search = search.trim())"
+      @keydown.enter="handleClick"
     />
-    <button class="bg-blue-500 text-white p-2 ml-2" @click="handleClick">Поиск</button>
+    <button
+      class="bg-blue-500 text-white p-2 ml-2 rounded hover:shadow-lg hover:shadow-blue-600/50 cursor-pointer active:shadow-none transition-shadow duration-100"
+      @click="handleClick"
+    >
+      Поиск
+    </button>
   </div>
 </template>
