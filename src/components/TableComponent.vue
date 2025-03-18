@@ -15,9 +15,7 @@ const handleScroll = async () => {
 
   if (scrollTop + clientHeight >= scrollHeight - 1) {
     scrollTop -= 10
-    dataStore.setStartIndex(dataStore.startIndex + dataStore.limit)
-    dataStore.setLimit(20)
-    await dataStore.fetchData(true)
+    dataStore.setLimit(dataStore.limit + 20)
   }
 }
 
@@ -35,8 +33,28 @@ const checkOverflow = (e) => {
   }
 }
 
-const sortTable = (column) => {
-  dataStore.sortStrings(column)
+const sortTable = (column, index) => {
+  scrollUp()
+  if (dataStore.sortedColumn === -1) {
+    dataStore.columnNames[index] += ' ↑'
+    dataStore.setSortedColumn(index)
+    dataStore.sortStrings(column, true)
+  } else if (dataStore.sortedColumn === index) {
+    if (dataStore.columnNames[index].includes('↑')) {
+      dataStore.columnNames[index] = dataStore.columnNames[index].replace('↑', '↓')
+      dataStore.sortStrings(column, false)
+    } else {
+      dataStore.columnNames[index] = dataStore.columnNames[index].replace('↓', '↑')
+      dataStore.sortStrings(column, true)
+    }
+  } else {
+    dataStore.columnNames[dataStore.sortedColumn] = dataStore.columnNames[
+      dataStore.sortedColumn
+    ].slice(0, -2)
+    dataStore.columnNames[index] += ' ↑'
+    dataStore.setSortedColumn(index)
+    dataStore.sortStrings(column, true)
+  }
 }
 
 defineExpose({ scrollUp })
@@ -45,46 +63,46 @@ defineExpose({ scrollUp })
 <template>
   <div
     ref="tableContainer"
-    class="w-[600px] max-h-[600px] overflow-y-auto border mx-auto mt-4"
+    class="max-w-[600px] max-h-[600px] overflow-y-auto border mx-auto mt-4"
     @scroll="handleScroll"
   >
     <table class="table-fixed w-full table-layout-fixed">
-      <thead class="sticky top-0 bg-white shadow-md">
+      <thead class="sticky top-0 bg-gray-500 text-white shadow-md">
         <tr>
           <th
-            class="border border-gray-300 p-2 w-[50px] hover:underline cursor-pointer"
-            @click="sortTable('id')"
+            class="border border-gray-300 p-2 w-11/120 hover:underline cursor-pointer"
+            @click="sortTable('id', 0)"
           >
-            Ид
+            {{ dataStore.columnNames[0] }}
           </th>
           <th
-            class="border border-gray-300 p-2 w-[80px] hover:underline cursor-pointer"
-            @click="sortTable('albumId')"
+            class="border border-gray-300 p-2 w-19/120 hover:underline cursor-pointer"
+            @click="sortTable('albumId', 1)"
           >
-            Альбом
+            {{ dataStore.columnNames[1] }}
           </th>
           <th
-            class="border border-gray-300 p-2 w-[160px] hover:underline cursor-pointer"
-            @click="sortTable('title')"
+            class="border border-gray-300 p-2 w-1/4 hover:underline cursor-pointer"
+            @click="sortTable('title', 2)"
           >
-            Название
+            {{ dataStore.columnNames[2] }}
           </th>
           <th
-            class="border border-gray-300 p-2 w-[160px] hover:underline cursor-pointer"
-            @click="sortTable('url')"
+            class="border border-gray-300 p-2 w-1/4 hover:underline cursor-pointer"
+            @click="sortTable('url', 3)"
           >
-            Ссылка
+            {{ dataStore.columnNames[3] }}
           </th>
           <th
             class="border border-gray-300 p-2 hover:underline cursor-pointer"
-            @click="sortTable('thumbnailUrl')"
+            @click="sortTable('thumbnailUrl', 4)"
           >
-            Миниатюра
+            {{ dataStore.columnNames[4] }}
           </th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="string in dataStore.strings" :key="string.id">
+        <tr v-for="string in dataStore.strings.slice(0, dataStore.limit)" :key="string.id">
           <td class="border border-gray-300 p-2 truncate" @mouseenter="checkOverflow">
             {{ string.id }}
           </td>
@@ -97,7 +115,7 @@ defineExpose({ scrollUp })
           <td class="border border-gray-300 p-2 truncate" @mouseenter="checkOverflow">
             {{ string.url }}
           </td>
-          <td class="border border-gray-300 p-2" @mouseenter="checkOverflow">
+          <td class="border border-gray-300 p-2 truncate" @mouseenter="checkOverflow">
             {{ string.thumbnailUrl }}
           </td>
         </tr>

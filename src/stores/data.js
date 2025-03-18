@@ -5,15 +5,13 @@ export const useDataStore = defineStore('data', () => {
   const strings = ref([])
   const isFetching = ref(false)
   const limit = ref(30)
-  const startIndex = ref(0)
   const albums = ref('')
+  const sortedColumn = ref(-1)
+  const columnNames = ref(['Ид', 'Альбом', 'Название', 'Ссылка', 'Миниатюра'])
+  const searchString = computed(() => `https://jsonplaceholder.typicode.com/photos${albums.value}`)
 
   const setIsFetching = (value) => {
     isFetching.value = value
-  }
-
-  const setStartIndex = (value) => {
-    startIndex.value = value
   }
 
   const setLimit = (value) => {
@@ -30,7 +28,7 @@ export const useDataStore = defineStore('data', () => {
 
   const setAlbums = (value) => {
     albums.value = value.length
-      ? '&' +
+      ? '?&' +
         value
           .split(' ')
           .map((album) => `albumId=${album}`)
@@ -38,10 +36,9 @@ export const useDataStore = defineStore('data', () => {
       : ''
   }
 
-  const searchString = computed(
-    () =>
-      `https://jsonplaceholder.typicode.com/photos?_limit=${limit.value}&_start=${startIndex.value}${albums.value}`,
-  )
+  const setSortedColumn = (value) => {
+    sortedColumn.value = value
+  }
 
   const fetchData = async (adding) => {
     console.log('Fetching data from:', searchString.value)
@@ -58,23 +55,30 @@ export const useDataStore = defineStore('data', () => {
     setIsFetching(false)
   }
 
-  const sortStrings = (value) => {
+  const sortStrings = (value, up) => {
+    setLimit(30)
     console.log('Sorting strings by:', value)
-    strings.value = strings.value.sort((a, b) => {
-      if (a[value] < b[value]) return -1
-      if (a[value] > b[value]) return 1
-    })
+    if (['id', 'albumId'].includes(value)) {
+      strings.value = strings.value.sort((a, b) => {
+        return up ? a[value] - b[value] : b[value] - a[value]
+      })
+    } else {
+      strings.value = strings.value.sort((a, b) => {
+        return up ? a[value].length - b[value].length : b[value].length - a[value].length
+      })
+    }
   }
 
   return {
     strings,
     isFetching,
-    startIndex,
     limit,
+    sortedColumn,
+    columnNames,
     fetchData,
     setLimit,
-    setStartIndex,
     setAlbums,
+    setSortedColumn,
     sortStrings,
   }
 })

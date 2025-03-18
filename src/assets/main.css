@@ -1,8 +1,18 @@
 @import 'tailwindcss';
 
+html.dark {
+  color-scheme: dark;
+}
+
 #app {
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
   font-weight: normal;
+}
+
+@media (max-width: 660px) {
+  #app {
+    padding: 0;
+  }
 }
